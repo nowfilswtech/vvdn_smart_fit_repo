@@ -1,18 +1,32 @@
-Library    SeleniumLibrary
+
+*** Settings ***
+Library    RequestsLibrary
 
 *** Variables ***
-${URL}    https://example.com
+${BASE_URL}    https://jsonplaceholder.typicode.com
 
 *** Test Cases ***
-Open Browser to Example
-    Open Browser    ${URL}    chrome
-    Title Should Be    Example Domain
-    [Teardown]    Close Browser
+Create And Retrieve User
+    [Documentation]    This test case creates a new user and then retrieves the user's data.
+    Create User
+    Retrieve User
 
-Verify Example Content
-    [Setup]    Open Browser to Example
-    Element Should Be Visible    xpath://h1[contains(text(), 'Example Domain')]
-    [Teardown]    Close Browser
+*** Keywords ***
+Create User
+    [Documentation]    This keyword sends a POST request to create a new user.
+    ${user_data}=    Create Dictionary
+    ...    name=John Doe
+    ...    username=johndoe
+    ...    email=johndoe@example.com
+    ${response}=    POST    ${BASE_URL}/users    json=${user_data}
+    Should Be Equal As Numbers    ${response.status_code}    201
+    Log    User created with response: ${response.json()}
 
-Verify Example Content1    
-    Log To Console    Example Domain
+Retrieve User
+    [Documentation]    This keyword sends a GET request to retrieve the created user.
+    ${user_id}=    Set Variable    1
+    ${response}=    GET    ${BASE_URL}/users/${user_id}
+    Should Be Equal As Numbers    ${response.status_code}    200
+    ${user_data}=    Evaluate    ${response.json()}
+    Should Be Equal    ${user_data.name}    Leanne Graham
+    Log    Retrieved user data: ${user_data}
